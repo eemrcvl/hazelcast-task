@@ -1,6 +1,6 @@
 ## Hazelcast Cloud - Interview Task
 ### Explanation
-This task is about creating automated tests which will create and delete a free cluster provided by https://cloud.hazelcast.com/. I implemented this task using Spring Boot & Gradle. You can test the code yourselves by running test cases in the AutomatedTests.java class. 
+This task is about creating automated tests which will create and delete a free cluster provided by https://cloud.hazelcast.com/. I implemented this task using Spring Boot & Gradle. You can test the code yourselves by running test cases in the HazelcastClustersAutomatedTests.java class. 
 ### Implementation Details
 #### _1. First Steps_
 As instructed in the email of this task, Hazelcast Cloud does not provide an open API. Thus, the first thing I did was monitoring the network activity during each interaction I made on https://cloud.hazelcast.com/. These interactions include actions like login, list cluster plans, create/delete a cluster. By monitoring the network activity I extracted necessary URLs, HTTP actions which would help me during the process. (e.g. To list available clusters: https://coordinator.hazelcast.cloud/cluster)

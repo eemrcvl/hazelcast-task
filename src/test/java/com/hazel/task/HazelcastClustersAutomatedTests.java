@@ -45,18 +45,19 @@ public class HazelcastClustersAutomatedTests {
             ResponseEntity<ClusterContentResponse> clusters = clusterServices.getMyClusters();
             Assertions.assertTrue(clusters.getBody().getContent().size() > 0); // Stop the test if not a valid body is received
 
-            if(ClusterState.RUNNING.toString().equals(clusters.getBody().getContent().get(0).getState())) {
+            if(clusterIsRunning(clusters)) {
                 // update the state
                 clusterState = ClusterState.RUNNING;
                 // check conditions
                 Assertions.assertEquals(HttpStatus.OK, clusters.getStatusCode());
-                Assertions.assertTrue(clusters.getBody().getContent().get(0).getId() > 0);
+                Assertions.assertTrue(getClusterId(clusters) > 0);
 
+                tryCount++;
                 System.out.println("[STATUS] Cluster state is " + ClusterState.RUNNING + " [" + tryCount + "/" + MAX_TRY_COUNT + "]");
             } else {
-                tryCount++;
                 // Wait for some time before making another request (prevent a case in which Hazelcast servers blacklist my IP)
                 Thread.sleep(2000);
+                tryCount++;
                 System.out.println("[STATUS] Cluster state is " + ClusterState.PENDING + " [" + tryCount + "/" + MAX_TRY_COUNT + "]");
             }
         }
@@ -69,7 +70,7 @@ public class HazelcastClustersAutomatedTests {
         ResponseEntity<ClusterContentResponse> clusters = clusterServices.getMyClusters();
         Assertions.assertNotNull(clusters.getBody().getContent());
 
-        int clusterId = clusters.getBody().getContent().get(0).getId();
+        int clusterId = getClusterId(clusters);
         // Then post the delete request
         ResponseEntity response = clusterServices.deleteCluster(clusterId);
         Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
@@ -88,17 +89,30 @@ public class HazelcastClustersAutomatedTests {
             ResponseEntity<ClusterContentResponse> clusters = clusterServices.getMyClusters();
             Assertions.assertNotNull(clusters.getBody().getContent());
 
-            if(clusters.getBody().getContent().size() == 0) { // is content empty
+            if(clusterResponseIsEmpty(clusters)) {
                 // If content is empty, it means there are no clusters, hence we can say the cluster we created earlier is deleted
                 clusterState = ClusterState.DELETED;
-
                 Assertions.assertEquals(HttpStatus.OK, clusters.getStatusCode());
+
+                tryCount++;
                 System.out.println("[STATUS] Cluster state is " + ClusterState.DELETED + " [" + tryCount + "/" + MAX_TRY_COUNT + "]");
             } else {
-                tryCount++;
                 Thread.sleep(2000);
+                tryCount++;
                 System.out.println("[STATUS] Cluster state is " + ClusterState.DELETE_IN_PROGRESS + " [" + tryCount + "/" + MAX_TRY_COUNT + "]");
             }
         }
+    }
+
+    private boolean clusterResponseIsEmpty(ResponseEntity<ClusterContentResponse> clusters) {
+        return clusters.getBody().getContent().size() == 0;
+    }
+
+    private boolean clusterIsRunning(ResponseEntity<ClusterContentResponse> clusters) {
+        return ClusterState.RUNNING.toString().equals(clusters.getBody().getContent().get(0).getState());
+    }
+
+    private int getClusterId(ResponseEntity<ClusterContentResponse> clusters) {
+        return clusters.getBody().getContent().get(0).getId();
     }
 }
